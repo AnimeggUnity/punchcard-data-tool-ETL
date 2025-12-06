@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+db/*.db
+
+# Output files
+output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (optional, uncomment if you want to exclude)
+# data/*.xlsx
+# data/*.csv
