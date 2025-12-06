@@ -15,7 +15,7 @@ env/
 *.swo
 
 # Database
-db/*.db
+db/
 
 # Output files
 output/
@@ -24,6 +24,8 @@ output/
 .DS_Store
 Thumbs.db
 
-# Data files (optional, uncomment if you want to exclude)
-# data/*.xlsx
-# data/*.csv
+# Data files (exclude from git)
+data/
+*.xlsx
+*.csv
+
