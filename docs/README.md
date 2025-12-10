@@ -6,6 +6,12 @@
 
 ### 給人類開發者
 
+- [reports_guide.md](reports_guide.md) - **報表系統開發指南**
+  - 報表架構與設計模式
+  - 各報表類型速查表
+  - 新增報表類型教學
+  - HTML 模板工具使用
+
 - [testing_guide.md](testing_guide.md) - 模組測試指南
   - 什麼是模組獨立測試
   - 測試範例與最佳實踐
@@ -28,13 +34,14 @@
 
 | 角色 | 建議閱讀 |
 |------|---------|
-| **新接手開發者** | 建議從 AI_ASSISTANT_GUIDE.md 開始 |
+| **新接手開發者** | 建議從 AI_ASSISTANT_GUIDE.md 開始，再看 reports_guide.md |
 | **AI 助手** | 必讀 AI_ASSISTANT_GUIDE.md |
 | **維護人員** | 重點閱讀 testing_guide.md |
 | **專案經理** | 了解 future_features/ 中的規劃 |
 
 ## 📝 未來文件計畫
 
+- [x] 報表系統開發指南
 - [ ] API 文件
 - [ ] 部署指南
 - [ ] 使用者手冊
