@@ -14,11 +14,12 @@ from services import DataProcessingService, ReportService, DriverListService
 
 class MainWindow:
     """主視窗類別"""
-    
-    def __init__(self):
+
+    def __init__(self, config_source: str = "未知"):
         self.path_mgr = PathManager()
         self.window = None
-        
+        self.config_source = config_source
+
         # 功能映射
         self.function_mapping = {
             "資料整理": self._process_data_organization,
@@ -205,27 +206,55 @@ class MainWindow:
         dialog.close()
         return selected_date
     
+    def _load_readme(self) -> str:
+        """載入 README.md 內容"""
+        try:
+            import os
+            # 尋找 README.md
+            readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'README.md')
+            if not os.path.exists(readme_path):
+                # 打包後可能在不同位置
+                readme_path = os.path.join(os.getcwd(), 'README.md')
+
+            if os.path.exists(readme_path):
+                with open(readme_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            else:
+                return "歡迎使用打卡系統資料處理工具 (ETL 版)\n\n請從左側選單選擇功能開始使用。"
+        except Exception as e:
+            return f"歡迎使用打卡系統資料處理工具 (ETL 版)\n\n(無法載入 README: {e})"
+
     def run(self):
         """執行主視窗"""
         sg.theme(AppConfig.GUI_THEME)
-        
+
         buttons = [[sg.Button(name, size=(30, 2), key=name)] for name in self.function_mapping.keys()]
-        
+
         left_col = sg.Column(buttons, scrollable=True, vertical_scroll_only=True, size=(280, 400))
         right_col = sg.Column([
             [sg.Text("執行結果:")],
-            [sg.Multiline(size=(80, 25), key='-OUTPUT-', autoscroll=True, 
+            [sg.Multiline(size=(80, 25), key='-OUTPUT-', autoscroll=True,
                          reroute_stdout=False, write_only=True, disabled=True)]
         ])
-        
+
         layout = [
             [sg.Pane([left_col, right_col], orientation='h', relief=sg.RELIEF_SUNKEN)],
-            [sg.StatusBar("就緒", size=(80, 1), key='-STATUS-'), 
+            [sg.StatusBar("就緒", size=(50, 1), key='-STATUS-'),
+             sg.Text(f"配置: {self.config_source}", size=(40, 1), key='-CONFIG-', relief=sg.RELIEF_SUNKEN),
              sg.Text(AppConfig.GUI_VERSION, justification='right')]
         ]
-        
+
         self.window = sg.Window("打卡系統資料處理工具 (ETL 版)", layout, resizable=True, finalize=True)
         self.window.set_min_size(self.window.size)
+
+        # 載入並顯示 README
+        readme_content = self._load_readme()
+        self.window['-OUTPUT-'].update(readme_content)
+        # 先捲動到文件底部，再捲回到第 115 行（確保 115 行顯示在視窗頂部）
+        self.window['-OUTPUT-'].Widget.see("end")
+        self.window['-OUTPUT-'].Widget.see("115.0")
+        # 設定 yview 讓第 115 行位於視窗頂部
+        self.window['-OUTPUT-'].Widget.yview("115.0")
         
         while True:
             event, values = self.window.read()
@@ -255,7 +284,7 @@ class MainWindow:
         self.window.close()
 
 
-def run_app():
+def run_app(config_source: str = "未知"):
     """啟動應用程式"""
-    app = MainWindow()
+    app = MainWindow(config_source=config_source)
     app.run()
