@@ -13,6 +13,7 @@ env/
 .idea/
 *.swp
 *.swo
+.claude/
 
 # Database
 db/
@@ -28,4 +29,15 @@ Thumbs.db
 data/
 *.xlsx
 *.csv
+
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Tools
+upx.exe
+
+# Temp files
+nul
 

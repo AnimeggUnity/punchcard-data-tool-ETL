@@ -76,6 +76,7 @@ class AppConfig:
     DB_PATH = 'db/source.db'
     PUNCH_DATA_PATH = 'data/刷卡資料.xlsx'
     SHIFT_CLASS_PATH = 'data/list.xlsx'
+    LEAVE_DATA_PATH = 'data/work.xlsx'  # 請假資料（支援 .xls 或 .xlsx）
     OUTPUT_DIR = 'output/'
     DRIVER_LIST_PATH = 'data/司機名單.csv'
     
@@ -83,8 +84,8 @@ class AppConfig:
     PUNCH_DATA_SKIP_ROWS = ExcelReadingConfig.PUNCH_DATA['skip_rows']
     PUNCH_DATA_HEADER_ROW = ExcelReadingConfig.PUNCH_DATA['header_row']
     
-    # 業務邏輯配置
-    NIGHT_MEAL_THRESHOLD = '22:00:00'
+    # 夜點時間門檻值
+    NIGHT_MEAL_THRESHOLD = '21:00:00'
     
     # GUI 配置
     GUI_THEME = 'LightGreen'
@@ -99,9 +100,49 @@ class AppConfig:
     TAIWAN_YEAR_OFFSET = 1911
 
 
+class ColumnNaming:
+    """
+    欄位名稱標準化配置
+
+    原則：
+    - 資料庫統一用英文小寫 + 底線（snake_case）
+    - Excel 原始欄位名保持不變
+    - ETL 階段自動轉換
+    """
+
+    # 打卡資料欄位對照
+    PUNCH_COLUMNS = {
+        '序號': 'seq_no',
+        '卡號': 'emp_id',
+        '公務帳號': 'account_id',
+        '身分證字號': 'id_number',
+        '人員姓名': 'name',
+        '刷卡日期': 'punch_date',
+        '刷卡時間': 'punch_time',
+        '門禁名稱': 'gate_name',
+        '進出狀態': 'direction',
+    }
+
+    # 班別資料欄位對照
+    SHIFT_COLUMNS = {
+        '班別': 'shift_class',
+        '卡號': 'emp_id',
+        '姓名': 'name',
+        '公務帳號': 'account_id',
+        '班次ID': 'shift_id',
+    }
+
+    # 司機名單欄位對照
+    DRIVER_COLUMNS = {
+        '公務帳號': 'account_id',
+        '卡號': 'emp_id',
+        '姓名': 'name',
+    }
+
+
 class PathManager:
     """路徑管理類別"""
-    
+
     def __init__(self):
         self.app_base_dir = get_app_base_dir()
     
@@ -120,7 +161,21 @@ class PathManager:
     def get_driver_list_path(self) -> str:
         """取得司機名單路徑"""
         return os.path.join(self.app_base_dir, AppConfig.DRIVER_LIST_PATH)
-    
+
+    def get_leave_data_path(self) -> str:
+        """取得請假資料路徑（自動檢測 .xlsx 或 .xls）"""
+        base_path = os.path.join(self.app_base_dir, AppConfig.LEAVE_DATA_PATH)
+
+        # 自動檢測 .xlsx 或 .xls
+        if os.path.exists(base_path):
+            return base_path
+        elif os.path.exists(base_path.replace('.xlsx', '.xls')):
+            return base_path.replace('.xlsx', '.xls')
+        elif os.path.exists(base_path.replace('.xls', '.xlsx')):
+            return base_path.replace('.xls', '.xlsx')
+        else:
+            return base_path  # 回傳預設路徑，讓呼叫者處理檔案不存在的情況
+
     def get_output_dir(self) -> str:
         """取得輸出目錄並確保其存在"""
         output_dir = os.path.join(self.app_base_dir, AppConfig.OUTPUT_DIR)
