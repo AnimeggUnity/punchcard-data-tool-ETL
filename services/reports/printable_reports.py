@@ -49,7 +49,7 @@ class PrintableDailyReport(BaseReport):
         </div>
         """
         
-        for class_name, group in df.groupby('班別'):
+        for class_name, group in df.groupby('shift_class'):
             content += f"""
             <div class="class-section">
                 <div class="class-title">{class_name}</div>
@@ -65,14 +65,14 @@ class PrintableDailyReport(BaseReport):
             """
             
             for _, row in group.iterrows():
-                name = row['姓名']
-                if driver_accounts and row['公務帳號'] in driver_accounts:
+                name = row['name']
+                if driver_accounts and row['account_id'] in driver_accounts:
                     name = f"{name} <span class='driver-tag'>(司機)</span>"
                 
                 content += f"""
                     <tr>
-                        <td class="center">{row['卡號']}</td>
-                        <td class="center">{row['公務帳號']}</td>
+                        <td class="center">{row['emp_id']}</td>
+                        <td class="center">{row['account_id']}</td>
                         <td class="center">{name}</td>
                         <td class="center">{row['打卡次數']}</td>
                         <td class="timestamps">{row['所有時間戳記']}</td>
@@ -121,14 +121,14 @@ class PrintableFullReport(BaseReport):
         </div>
         """
         
-        for card_number, group in df.groupby('卡號'):
-            accounts = '、'.join(map(str, group['公務帳號'].unique()))
-            names = group['姓名'].unique()
-            classes = '、'.join(map(str, group['班別'].unique()))
+        for card_number, group in df.groupby('emp_id'):
+            accounts = '、'.join(map(str, group['account_id'].unique()))
+            names = group['name'].unique()
+            classes = '、'.join(map(str, group['shift_class'].unique()))
             
             formatted_names = []
             for name in names:
-                emp_accounts = group[group['姓名'] == name]['公務帳號'].unique()
+                emp_accounts = group[group['name'] == name]['account_id'].unique()
                 is_driver = any(acc in driver_accounts for acc in emp_accounts) if driver_accounts else False
                 formatted_names.append(f"{name} (司機)" if is_driver else str(name))
             names_display = '、'.join(formatted_names)

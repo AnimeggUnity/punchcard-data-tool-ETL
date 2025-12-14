@@ -46,12 +46,16 @@ class NightMealReport(BaseReport):
         conn = sqlite3.connect(':memory:')
         df.to_sql('data', conn, index=False)
         summary = pd.read_sql("""
-            SELECT 班別, 卡號, 公務帳號, 姓名, 月份,
+            SELECT shift_class as '班別',
+                   emp_id as '卡號',
+                   account_id as '公務帳號',
+                   name as '姓名',
+                   月份,
                    COUNT(DISTINCT 日期) AS 夜點天數,
                    GROUP_CONCAT(日期, ', ') AS 日期清單
             FROM data
-            GROUP BY 班別, 卡號, 公務帳號, 姓名, 月份
-            ORDER BY 班別, 卡號, 月份
+            GROUP BY shift_class, emp_id, account_id, name, 月份
+            ORDER BY shift_class, emp_id, 月份
         """, conn)
         conn.close()
         

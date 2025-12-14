@@ -39,13 +39,13 @@ class FullPunchReport(BaseReport):
     
     def _generate_content(self, df: pd.DataFrame, driver_accounts: Set[str]) -> str:
         """生成完整打卡內容"""
-        total_employees = df['卡號'].nunique()
+        total_employees = df['emp_id'].nunique()
         total_records = len(df)
         date_range = f"{df['日期'].min()} ~ {df['日期'].max()}"
         
         driver_count = 0
         if driver_accounts:
-            driver_count = len(set(df[df['公務帳號'].isin(driver_accounts)]['公務帳號'].unique()))
+            driver_count = len(set(df[df['account_id'].isin(driver_accounts)]['account_id'].unique()))
         
         content = f"""
         <div class="page-header">
@@ -98,15 +98,15 @@ class FullPunchReport(BaseReport):
         </div>
         """
         
-        for card_number, group in df.groupby('卡號'):
-            accounts = '、'.join(map(str, group['公務帳號'].unique()))
-            names = group['姓名'].unique()
-            classes = '、'.join(map(str, group['班別'].unique()))
+        for card_number, group in df.groupby('emp_id'):
+            accounts = '、'.join(map(str, group['account_id'].unique()))
+            names = group['name'].unique()
+            classes = '、'.join(map(str, group['shift_class'].unique()))
             
             # 處理司機標記
             formatted_names = []
             for name in names:
-                emp_accounts = group[group['姓名'] == name]['公務帳號'].unique()
+                emp_accounts = group[group['name'] == name]['account_id'].unique()
                 is_driver = any(acc in driver_accounts for acc in emp_accounts) if driver_accounts else False
                 if is_driver:
                     formatted_names.append(f'{name} <span class="badge bg-danger text-white ms-1">司機</span>')

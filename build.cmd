@@ -103,6 +103,13 @@ if exist "dist\PunchHelper\PunchHelper.exe" (
         echo [WARNING] 找不到 README.md
     )
 
+    REM 創建必要的資料夾
+    echo 創建必要的資料夾 data, db, output...
+    if not exist "dist\PunchHelper\data" mkdir "dist\PunchHelper\data"
+    if not exist "dist\PunchHelper\db" mkdir "dist\PunchHelper\db"
+    if not exist "dist\PunchHelper\output" mkdir "dist\PunchHelper\output"
+    echo [OK] 資料夾已創建
+
     echo.
     dir "dist\PunchHelper\PunchHelper.exe"
     echo.

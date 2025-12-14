@@ -385,11 +385,11 @@ class MainWindow:
         # 載入並顯示 README
         readme_content = self._load_readme()
         self.window['-OUTPUT-'].update(readme_content)
-        # 先捲動到文件底部，再捲回到第 115 行（確保 115 行顯示在視窗頂部）
+        # 先捲動到文件底部，再捲回到第 162 行（確保 162 行顯示在視窗頂部）
         self.window['-OUTPUT-'].Widget.see("end")
-        self.window['-OUTPUT-'].Widget.see("115.0")
-        # 設定 yview 讓第 115 行位於視窗頂部
-        self.window['-OUTPUT-'].Widget.yview("115.0")
+        self.window['-OUTPUT-'].Widget.see("162.0")
+        # 設定 yview 讓第 162 行位於視窗頂部
+        self.window['-OUTPUT-'].Widget.yview("162.0")
         
         while True:
             event, values = self.window.read()

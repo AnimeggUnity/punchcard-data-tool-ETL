@@ -165,20 +165,30 @@ class PunchDataETL:
             punch_df = punch_df.rename(columns=ColumnNaming.PUNCH_COLUMNS)
             self.output_callback(f"✓ 欄位已標準化: {list(punch_df.columns)[:8]}...")
 
-            # 嘗試 Pydantic 驗證（可選）
+            # Pydantic 驗證（使用標準化欄位）
+            valid_punch = []  # 初始化為空列表
             try:
                 punch_validator = DataValidator(PunchRecord)
                 valid_punch, punch_result = punch_validator.validate(punch_df, self.output_callback)
-                self.output_callback(f"Pydantic 驗證: {punch_result.valid_count} 成功, {punch_result.error_count} 失敗")
+                self.output_callback(f"✅ Pydantic 驗證: {punch_result.valid_count} 成功, {punch_result.error_count} 失敗")
+                if punch_result.error_count > 0:
+                    self.output_callback(punch_result.get_error_summary(max_errors=5))
             except Exception as ve:
-                self.output_callback(f"Pydantic 驗證跳過: {ve}")
+                self.output_callback(f"⚠️  Pydantic 驗證跳過: {ve}")
+                # 確保在驗證出錯時 valid_punch 肯定是空的
+                valid_punch = []
             
-            # 直接載入（與原始程式相同）
-            conn = sqlite3.connect(db_path)
-            punch_df.to_sql('punch', conn, if_exists='replace', index=False)
-            conn.close()
-            punch_loaded = len(punch_df)
-            self.output_callback(f"載入完成，{punch_loaded} 筆至 punch")
+            # 載入通過驗證的資料
+            if valid_punch:
+                validated_df = pd.DataFrame([r.model_dump() for r in valid_punch])
+                conn = sqlite3.connect(db_path)
+                validated_df.to_sql('punch', conn, if_exists='replace', index=False)
+                conn.close()
+                punch_loaded = len(validated_df)
+                self.output_callback(f"載入完成，{punch_loaded} 筆有效資料至 punch")
+            else:
+                punch_loaded = 0
+                self.output_callback("警告：沒有資料通過驗證，未載入 punch 資料表。")
             
             # === 處理班別資料 ===
             self.output_callback("=" * 50)
@@ -325,14 +335,16 @@ class PunchDataETL:
                 return val
             df['刷卡日期'] = df['刷卡日期'].apply(convert_date)
         
-        # 轉換時間：HHMM → HH:MM:SS
+        # 轉換時間：HHMMSS → HH:MM:SS
         if '刷卡時間' in df.columns:
             def convert_time(val):
                 if pd.isna(val):
                     return val
                 val = str(val).strip()
-                if len(val) == 4 and val.isdigit():
-                    return f"{val[:2]}:{val[2:4]}:00"
+                # 只處理 HHMMSS 格式
+                if len(val) == 6 and val.isdigit():
+                    return f"{val[:2]}:{val[2:4]}:{val[4:6]}"
+                # 如果格式不符，回傳原始值以便於除錯
                 return val
             df['刷卡時間'] = df['刷卡時間'].apply(convert_time)
         

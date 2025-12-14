@@ -41,8 +41,8 @@ class DailyPunchReport(BaseReport):
     def _generate_content(self, df: pd.DataFrame, date_str: str, driver_accounts: Set[str]) -> str:
         """生成單日打卡內容"""
         total = len(df)
-        classes = df['班別'].nunique()
-        drivers = len(df[df['公務帳號'].isin(driver_accounts)])
+        classes = df['shift_class'].nunique()
+        drivers = len(df[df['account_id'].isin(driver_accounts)])
         
         content = f"""
         <div class="page-header">
@@ -58,7 +58,7 @@ class DailyPunchReport(BaseReport):
         ]
         content += HtmlComponentGenerator.generate_stats_row(stats)
         
-        for class_name, group in df.groupby('班別'):
+        for class_name, group in df.groupby('shift_class'):
             content += f"""
             <div class="section-card">
                 <h3 class="section-header">
@@ -77,13 +77,13 @@ class DailyPunchReport(BaseReport):
             """
             
             for _, row in group.iterrows():
-                name = HtmlComponentGenerator.mark_driver_account(row['姓名'], row['公務帳號'], driver_accounts)
+                name = HtmlComponentGenerator.mark_driver_account(row['name'], row['account_id'], driver_accounts)
                 timestamps = HtmlComponentGenerator.colorize_timestamps(row['所有時間戳記'].split(', '))
                 
                 content += f"""
                             <tr>
-                                <td><strong>{row['卡號']}</strong></td>
-                                <td><code>{row['公務帳號']}</code></td>
+                                <td><strong>{row['emp_id']}</strong></td>
+                                <td><code>{row['account_id']}</code></td>
                                 <td>{name}</td>
                                 <td><span class="badge bg-primary">{row['打卡次數']}</span></td>
                                 <td class="text-start">{timestamps}</td>

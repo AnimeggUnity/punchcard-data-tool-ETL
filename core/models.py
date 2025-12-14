@@ -12,78 +12,60 @@ import re
 
 
 class PunchRecord(BaseModel):
-    """打卡記錄資料模型"""
-    
+    """打卡記錄資料模型（標準化欄位）"""
+
     # 自動忽略 Excel 中的多餘欄位
     model_config = ConfigDict(extra='ignore')
-    
-    公務帳號: str = Field(..., min_length=1, max_length=50)
-    刷卡日期: date
-    刷卡時間: time
-    序號: Optional[int] = None
-    
-    @field_validator('公務帳號')
+
+    # 使用標準化欄位名稱
+    account_id: str = Field(..., min_length=1, max_length=50)
+    punch_date: str  # 已轉換為 YYYY-MM-DD 格式的字串
+    punch_time: str  # 已轉換為 HH:MM:SS 格式的字串
+    seq_no: Optional[int] = None
+    emp_id: Optional[str] = None
+    name: Optional[str] = None
+
+    @field_validator('account_id')
     @classmethod
     def validate_account(cls, v):
         if not v or v.strip() == '':
-            raise ValueError('公務帳號不可為空')
+            raise ValueError('account_id 不可為空')
         return v.strip()
-    
-    @field_validator('刷卡日期', mode='before')
+
+    @field_validator('punch_date')
     @classmethod
-    def parse_date(cls, v):
-        """處理多種日期格式"""
-        if isinstance(v, date):
-            return v
-        if isinstance(v, str):
-            v = v.strip()
-            # 民國年格式（7位數字：YYYMMDD）
-            if len(v) == 7 and v.isdigit():
-                year = int(v[:3]) + 1911
-                month = int(v[3:5])
-                day = int(v[5:7])
-                return date(year, month, day)
-            # 西元年格式（YYYY-MM-DD）
-            if '-' in v:
-                return datetime.strptime(v, '%Y-%m-%d').date()
-        try:
-            return datetime.fromisoformat(str(v)).date()
-        except:
-            raise ValueError(f'無法解析日期格式: {v}')
-    
-    @field_validator('刷卡時間', mode='before')
+    def validate_date(cls, v):
+        """驗證日期格式（已轉換後的 YYYY-MM-DD）"""
+        if not v or v.strip() == '':
+            raise ValueError('punch_date 不可為空')
+        # 簡單驗證格式
+        if not re.match(r'\d{4}-\d{2}-\d{2}', v):
+            raise ValueError(f'punch_date 格式錯誤: {v}')
+        return v.strip()
+
+    @field_validator('punch_time')
     @classmethod
-    def parse_time(cls, v):
-        """處理多種時間格式"""
-        if isinstance(v, time):
-            return v
-        if isinstance(v, str):
-            v = v.strip()
-            # 4位數字格式（HHMM）
-            if len(v) == 4 and v.isdigit():
-                return time(int(v[:2]), int(v[2:4]), 0)
-            # 6位數字格式（HHMMSS）
-            if len(v) == 6 and v.isdigit():
-                return time(int(v[:2]), int(v[2:4]), int(v[4:6]))
-            # 標準格式（HH:MM:SS 或 HH:MM）
-            if ':' in v:
-                parts = v.split(':')
-                if len(parts) == 2:
-                    return time(int(parts[0]), int(parts[1]), 0)
-                elif len(parts) == 3:
-                    return time(int(parts[0]), int(parts[1]), int(parts[2]))
-        raise ValueError(f'無法解析時間格式: {v}')
+    def validate_time(cls, v):
+        """驗證時間格式（已轉換後的 HH:MM:SS）"""
+        if not v or v.strip() == '':
+            raise ValueError('punch_time 不可為空')
+        # 簡單驗證格式
+        if not re.match(r'\d{2}:\d{2}:\d{2}', v):
+            raise ValueError(f'punch_time 格式錯誤: {v}')
+        return v.strip()
 
 
 class ShiftClass(BaseModel):
-    """班別資料模型"""
-    
-    公務帳號: str = Field(..., min_length=1, max_length=50)
-    卡號: Optional[str] = None
-    姓名: Optional[str] = None
-    班別: str = Field(..., min_length=1, max_length=50)
-    
-    @field_validator('公務帳號', '班別')
+    """班別資料模型（標準化欄位）"""
+
+    # 使用標準化欄位名稱
+    account_id: str = Field(..., min_length=1, max_length=50)
+    emp_id: Optional[str] = None
+    name: Optional[str] = None
+    shift_class: str = Field(..., min_length=1, max_length=50)
+    shift_id: Optional[str] = None
+
+    @field_validator('account_id', 'shift_class')
     @classmethod
     def validate_required(cls, v):
         if not v or v.strip() == '':
@@ -92,46 +74,49 @@ class ShiftClass(BaseModel):
 
 
 class IntegratedPunchRecord(BaseModel):
-    """整合後的打卡記錄"""
-    
-    公務帳號: str
-    卡號: Optional[str] = None
-    姓名: Optional[str] = None
-    班別: Optional[str] = None
-    刷卡日期: date
-    刷卡時間列表: List[time] = Field(default_factory=list)
-    
+    """整合後的打卡記錄（標準化欄位）"""
+
+    account_id: str
+    emp_id: Optional[str] = None
+    name: Optional[str] = None
+    shift_class: Optional[str] = None
+    punch_date: str  # YYYY-MM-DD 格式
+    punch_times: List[str] = Field(default_factory=list)  # HH:MM:SS 格式列表
+
     @property
-    def 最後刷卡時間(self) -> Optional[time]:
-        return max(self.刷卡時間列表) if self.刷卡時間列表 else None
-    
+    def last_punch_time(self) -> Optional[str]:
+        return max(self.punch_times) if self.punch_times else None
+
     @property
-    def 第一次刷卡時間(self) -> Optional[time]:
-        return min(self.刷卡時間列表) if self.刷卡時間列表 else None
-    
+    def first_punch_time(self) -> Optional[str]:
+        return min(self.punch_times) if self.punch_times else None
+
     @property
-    def 刷卡次數(self) -> int:
-        return len(self.刷卡時間列表)
-    
-    def is_night_meal_eligible(self, threshold: time = time(22, 0, 0)) -> bool:
-        last_time = self.最後刷卡時間
+    def punch_count(self) -> int:
+        return len(self.punch_times)
+
+    def is_night_meal_eligible(self, threshold: str = "22:00:00") -> bool:
+        last_time = self.last_punch_time
         return last_time is not None and last_time > threshold
 
 
 class DriverInfo(BaseModel):
-    """司機資訊模型"""
-    公務帳號: str = Field(..., min_length=1)
+    """司機資訊模型（標準化欄位）"""
+    account_id: str = Field(..., min_length=1)
+    emp_id: Optional[str] = None
+    name: Optional[str] = None
+    is_driver: bool = True
 
 
 class NightMealRecord(BaseModel):
-    """夜點津貼記錄"""
-    卡號: Optional[str] = None
-    公務帳號: str
-    姓名: Optional[str] = None
-    班別: str
-    月份: str
-    日期: str
-    是否為司機: bool = False
+    """夜點津貼記錄（標準化欄位）"""
+    emp_id: Optional[str] = None
+    account_id: str
+    name: Optional[str] = None
+    shift_class: str
+    month: str  # 月份
+    day: str    # 日期
+    is_driver: bool = False
 
 
 class ValidationResult(BaseModel):
