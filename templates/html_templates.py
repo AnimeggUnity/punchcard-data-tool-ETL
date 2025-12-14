@@ -56,8 +56,15 @@ class HtmlTemplateManager:
     """HTML 模板管理器"""
     
     @staticmethod
-    def get_bootstrap_template(title: str, content: str) -> str:
-        """Bootstrap 5 HTML 模板"""
+    def get_bootstrap_template(title: str, content: str, custom_scripts: str = "", custom_styles: str = "") -> str:
+        """Bootstrap 5 HTML 模板
+
+        Args:
+            title: 報表標題
+            content: 報表內容 HTML
+            custom_scripts: 自訂 JavaScript 代碼（可選）
+            custom_styles: 自訂 CSS 樣式（可選）
+        """
         return f"""<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -84,6 +91,7 @@ class HtmlTemplateManager:
         [data-bs-theme="dark"] .section-header {{ background: linear-gradient(135deg, #2b6cb0 0%, #1a202c 100%); }}
         .theme-switcher-btn {{ position: fixed; bottom: 20px; right: 20px; z-index: 1000; }}
         .footer-info {{ text-align: center; padding: 20px; color: #666; font-size: 0.9rem; }}
+        {custom_styles}
     </style>
 </head>
 <body class="bg-body-tertiary">
@@ -128,6 +136,7 @@ class HtmlTemplateManager:
             }})
         }})()
     </script>
+    {custom_scripts}
 </body>
 </html>"""
     

@@ -281,8 +281,13 @@ class LeaveDeductionCalculator:
         </div>
         """
 
-        # 使用模板
-        html = self._get_bootstrap_template("請假扣款報表", content)
+        # 使用模板系統
+        html = HtmlTemplateManager.get_bootstrap_template(
+            title="請假扣款報表",
+            content=content,
+            custom_scripts=self._generate_custom_scripts(),
+            custom_styles=self._generate_custom_styles()
+        )
 
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html)
@@ -465,149 +470,129 @@ class LeaveDeductionCalculator:
         </div>
         """
 
-    def _get_bootstrap_template(self, title: str, content: str) -> str:
-        """取得 Bootstrap HTML 模板"""
-        return f"""<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {{ font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }}
-        .page-header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center; }}
-        .stats-card {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }}
-        .stats-number {{ font-size: 2rem; font-weight: bold; }}
-        .section-card {{ border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; overflow: hidden; }}
-        .section-header {{ background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px 25px; margin: 0; }}
-        .employee-section {{ border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-        .employee-header {{ background-color: #f8f9fa !important; margin: 0; padding: 12px 15px; border-bottom: 2px solid #dee2e6; }}
-        .daily-table {{ margin-bottom: 0 !important; }}
-        .daily-table th {{ font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; }}
-        .daily-table td {{ vertical-align: middle; }}
-        .footer-info {{ text-align: center; padding: 20px; color: #666; font-size: 0.9rem; }}
-        .summary-row:hover {{ background-color: #f8f9fa !important; }}
-        .summary-row {{ transition: background-color 0.2s; }}
-        .detail-row > td {{ border-top: none !important; }}
-        .detail-container {{ border-top: 2px solid #dee2e6; }}
-        .collapse-icon {{ transition: transform 0.2s; display: inline-block; }}
-        .summary-row[aria-expanded="true"] .collapse-icon {{ transform: rotate(90deg); }}
-        .search-box {{ position: fixed; bottom: 80px; right: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); width: 300px; }}
-        .search-results {{ max-height: 300px; overflow-y: auto; font-size: 0.9rem; }}
-        .search-result-item {{ padding: 8px 12px; cursor: pointer; border-radius: 5px; margin-bottom: 5px; background: #f8f9fa; transition: background 0.2s; }}
-        .search-result-item:hover {{ background: #e9ecef; }}
-        .employee-section.highlight {{ animation: highlightAnim 2s; }}
-        @keyframes highlightAnim {{ 0%, 100% {{ background-color: transparent; }} 50% {{ background-color: #fff3cd; }} }}
-        .fixed-header {{ position: fixed; top: 0; z-index: 1020; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); opacity: 0; visibility: hidden; transition: opacity 0.2s; }}
-        .fixed-header.active {{ opacity: 1; visibility: visible; }}
-        .fixed-header thead {{ background-color: #f8f9fa; }}
-        .fixed-header th {{ border-top: none; }}
-    </style>
-</head>
-<body class="bg-light">
-    <div class="container-fluid">
-        <div class="container bg-white p-4 my-4 rounded shadow">
-            {content}
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    def _generate_custom_styles(self) -> str:
+        """生成請假扣款報表專用的 CSS 樣式"""
+        return """
+        .employee-section { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .employee-header { background-color: #f8f9fa !important; margin: 0; padding: 12px 15px; border-bottom: 2px solid #dee2e6; }
+        .daily-table { margin-bottom: 0 !important; }
+        .daily-table th { font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+        .daily-table td { vertical-align: middle; }
+        .summary-row:hover { background-color: #f8f9fa !important; }
+        .summary-row { transition: background-color 0.2s; }
+        .detail-row > td { border-top: none !important; }
+        .detail-container { border-top: 2px solid #dee2e6; }
+        .collapse-icon { transition: transform 0.2s; display: inline-block; }
+        .summary-row[aria-expanded="true"] .collapse-icon { transform: rotate(90deg); }
+        .search-box { position: fixed; bottom: 80px; right: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); width: 300px; }
+        .search-results { max-height: 300px; overflow-y: auto; font-size: 0.9rem; }
+        .search-result-item { padding: 8px 12px; cursor: pointer; border-radius: 5px; margin-bottom: 5px; background: #f8f9fa; transition: background 0.2s; }
+        .search-result-item:hover { background: #e9ecef; }
+        .employee-section.highlight { animation: highlightAnim 2s; }
+        @keyframes highlightAnim { 0%, 100% { background-color: transparent; } 50% { background-color: #fff3cd; } }
+        .fixed-header { position: fixed; top: 0; z-index: 1020; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); opacity: 0; visibility: hidden; transition: opacity 0.2s; }
+        .fixed-header.active { opacity: 1; visibility: visible; }
+        .fixed-header thead { background-color: #f8f9fa; }
+        .fixed-header th { border-top: none; }
+        """
+
+    def _generate_custom_scripts(self) -> str:
+        """生成請假扣款報表專用的 JavaScript 腳本"""
+        return """
     <script>
-        document.addEventListener('DOMContentLoaded', function() {{
+        document.addEventListener('DOMContentLoaded', function() {
             const collapsibleRows = document.querySelectorAll('[data-bs-toggle="collapse"]');
-            collapsibleRows.forEach(row => {{
+            collapsibleRows.forEach(row => {
                 const target = row.getAttribute('data-bs-target');
                 const collapseElement = document.querySelector(target);
-                if (collapseElement) {{
-                    collapseElement.addEventListener('show.bs.collapse', function() {{ row.setAttribute('aria-expanded', 'true'); }});
-                    collapseElement.addEventListener('hide.bs.collapse', function() {{ row.setAttribute('aria-expanded', 'false'); }});
-                }}
-            }});
+                if (collapseElement) {
+                    collapseElement.addEventListener('show.bs.collapse', function() { row.setAttribute('aria-expanded', 'true'); });
+                    collapseElement.addEventListener('hide.bs.collapse', function() { row.setAttribute('aria-expanded', 'false'); });
+                }
+            });
 
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
             const clearBtn = document.getElementById('clearBtn');
             const searchResults = document.getElementById('searchResults');
 
-            function searchEmployee(keyword) {{
-                if (!keyword.trim()) {{ searchResults.innerHTML = ''; return; }}
+            function searchEmployee(keyword) {
+                if (!keyword.trim()) { searchResults.innerHTML = ''; return; }
                 const sections = document.querySelectorAll('.employee-section');
                 const matches = [];
-                sections.forEach(section => {{
+                sections.forEach(section => {
                     const empId = section.dataset.empId || '';
                     const name = section.dataset.name || '';
-                    if (empId.includes(keyword) || name.includes(keyword)) {{
-                        matches.push({{ empId: empId, name: name, element: section }});
-                    }}
-                }});
-                if (matches.length === 0) {{
+                    if (empId.includes(keyword) || name.includes(keyword)) {
+                        matches.push({ empId: empId, name: name, element: section });
+                    }
+                });
+                if (matches.length === 0) {
                     searchResults.innerHTML = '<div class="text-muted small">找不到相符的員工</div>';
-                }} else if (matches.length === 1) {{
+                } else if (matches.length === 1) {
                     scrollToEmployee(matches[0].element, true);
-                }} else {{
+                } else {
                     let html = '<div class="small text-muted mb-2">找到 ' + matches.length + ' 位員工：</div>';
-                    matches.forEach(match => {{
+                    matches.forEach(match => {
                         html += '<div class="search-result-item" data-emp-id="' + match.empId + '">' +
                                 '<strong>' + match.empId + '</strong> - ' + match.name + '</div>';
-                    }});
+                    });
                     searchResults.innerHTML = html;
-                    document.querySelectorAll('.search-result-item').forEach(item => {{
-                        item.addEventListener('click', function() {{
+                    document.querySelectorAll('.search-result-item').forEach(item => {
+                        item.addEventListener('click', function() {
                             const empId = this.dataset.empId;
                             const section = document.getElementById('emp-' + empId);
-                            if (section) {{ scrollToEmployee(section, true); }}
-                        }});
-                    }});
-                }}
-            }}
+                            if (section) { scrollToEmployee(section, true); }
+                        });
+                    });
+                }
+            }
 
-            function scrollToEmployee(element, clearSearch) {{
-                element.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+            function scrollToEmployee(element, clearSearch) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 element.classList.add('highlight');
                 setTimeout(() => element.classList.remove('highlight'), 2000);
-                if (clearSearch) {{
-                    setTimeout(() => {{ searchInput.value = ''; searchResults.innerHTML = ''; }}, 100);
-                }}
-            }}
+                if (clearSearch) {
+                    setTimeout(() => { searchInput.value = ''; searchResults.innerHTML = ''; }, 100);
+                }
+            }
 
-            searchInput.addEventListener('input', function() {{ searchEmployee(this.value); }});
-            searchBtn.addEventListener('click', function() {{ searchEmployee(searchInput.value); }});
-            searchInput.addEventListener('keypress', function(e) {{ if (e.key === 'Enter') {{ searchEmployee(this.value); }} }});
-            clearBtn.addEventListener('click', function() {{ searchInput.value = ''; searchResults.innerHTML = ''; searchInput.focus(); }});
+            searchInput.addEventListener('input', function() { searchEmployee(this.value); });
+            searchBtn.addEventListener('click', function() { searchEmployee(searchInput.value); });
+            searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { searchEmployee(this.value); } });
+            clearBtn.addEventListener('click', function() { searchInput.value = ''; searchResults.innerHTML = ''; searchInput.focus(); });
 
             // 固定表頭功能
             const summaryTable = document.querySelector('.section-card .table-hover');
-            if (summaryTable) {{
+            if (summaryTable) {
                 const originalHeader = summaryTable.querySelector('thead');
-                if (originalHeader) {{
+                if (originalHeader) {
                     const fixedTable = summaryTable.cloneNode(false);
                     fixedTable.classList.add('fixed-header', 'table', 'table-hover', 'table-bordered');
                     const fixedHeader = originalHeader.cloneNode(true);
                     fixedTable.appendChild(fixedHeader);
                     document.body.appendChild(fixedTable);
 
-                    function updateFixedHeader() {{
+                    function updateFixedHeader() {
                         const tableRect = summaryTable.getBoundingClientRect();
                         const headerRect = originalHeader.getBoundingClientRect();
-                        if (headerRect.top < 0 && tableRect.bottom > 40) {{
+                        if (headerRect.top < 0 && tableRect.bottom > 40) {
                             fixedTable.classList.add('active');
                             fixedTable.style.width = summaryTable.offsetWidth + 'px';
                             fixedTable.style.left = tableRect.left + 'px';
                             const originalCells = originalHeader.querySelectorAll('th');
                             const fixedCells = fixedHeader.querySelectorAll('th');
-                            originalCells.forEach((cell, index) => {{
-                                if (fixedCells[index]) {{ fixedCells[index].style.width = cell.offsetWidth + 'px'; }}
-                            }});
-                        }} else {{
+                            originalCells.forEach((cell, index) => {
+                                if (fixedCells[index]) { fixedCells[index].style.width = cell.offsetWidth + 'px'; }
+                            });
+                        } else {
                             fixedTable.classList.remove('active');
-                        }}
-                    }}
+                        }
+                    }
                     window.addEventListener('scroll', updateFixedHeader);
                     window.addEventListener('resize', updateFixedHeader);
-                }}
-            }}
-        }});
+                }
+            }
+        });
     </script>
-</body>
-</html>"""
+        """
