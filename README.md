@@ -35,8 +35,12 @@ punch_helper_etl/
 │   └── driver_service.py  # 司機名單服務
 ├── scripts/               # 獨立執行腳本
 │   └── process_leave_deduction.py  # 請假扣款處理腳本
-├── templates/             # HTML 模板
-│   └── html_templates.py
+├── templates/             # HTML 模板系統
+│   └── html_templates.py  # 統一模板管理器（Bootstrap 5）
+├── docs/                  # 專案文件
+│   ├── reports_guide.md   # 報表系統指南
+│   ├── template_system_guide.md  # 模板系統使用指南
+│   └── testing_guide.md   # 測試指南
 ├── gui/                   # GUI 介面
 │   └── main_window.py
 ├── tests/                 # 單元測試
@@ -171,7 +175,9 @@ class ExcelReadingConfig:
 - 單日打卡查詢（含列印版）
 - 完整打卡記錄查詢（含列印版）
 - 支援深色/淺色主題切換
+- **統一 HTML 模板系統**：所有報表使用 Bootstrap 5 統一模板，一處修改全域生效
 - 模組化報表架構（詳見 [docs/reports_guide.md](docs/reports_guide.md)）
+- 模板系統使用指南（詳見 [docs/template_system_guide.md](docs/template_system_guide.md)）
 
 ### 請假扣款處理
 - 解析請假資料（支援 .xls 與 .xlsx 格式）
@@ -288,7 +294,18 @@ python test_etl.py
 
 ## 📝 版本歷史
 
-### v2.1 - 資料標準化與整合優化
+### v2.1.1 - 模板系統統一與文件完善 (2025-12-14)
+- 🎨 **統一 HTML 模板系統**：所有報表使用 `HtmlTemplateManager`，消除重複代碼
+  - 增強模板支援自訂樣式與腳本
+  - 降低維護成本，改樣式只需一處修改
+  - 請假扣款報表重構使用統一模板（保留搜索、折疊、固定表頭等功能）
+- 📚 **完善專案文件**：新增 `docs/template_system_guide.md` 模板系統使用指南
+  - TL;DR 快速上手
+  - 進階用法（自訂樣式/腳本）
+  - 實際案例與最佳實踐
+- 🔧 **建置改進**：build.cmd 自動創建必要資料夾 (data, db, output)
+
+### v2.1 - 資料標準化與整合優化 (2025-12)
 - ✨ **欄位標準化**：資料庫欄位統一使用英文 snake_case 命名
 - ✨ **司機名單整合**：司機名單整合到資料庫，不再依賴外部 CSV
 - 🔧 **請假扣款處理**：新增請假資料解析與扣款計算功能
